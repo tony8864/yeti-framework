@@ -18,8 +18,11 @@ public class HttpStepRunner implements StepRunner {
     @Override
     public void runStep(Step step, VariableContext context) {
         Endpoint endpoint = EndpointRegistry.get(step.getEndpointName());
-        DataRegistry.get(step.getDataName());
-        Object requestData = DataRegistry.get(step.getDataName()).value();
+
+        Object requestData = null;
+        if (step.getDataName() != null) {
+            requestData = DataRegistry.get(step.getDataName()).value();
+        }
 
         Map<String, String> resolvedPathParams = resolveMap(step.getPathParams(), context);
         Map<String, String> resolvedQueryParams = resolveMap(step.getQueryParams(), context);

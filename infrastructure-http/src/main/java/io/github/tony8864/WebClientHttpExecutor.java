@@ -38,8 +38,7 @@ public class WebClientHttpExecutor implements HttpExecutor {
         }
 
         ResponseEntity<String> entity = requestBodySpec
-                .retrieve()
-                .toEntity(String.class)
+                .exchangeToMono(response -> response.toEntity(String.class))
                 .block();
 
         Objects.requireNonNull(entity, "ResponseEntity must not be null");

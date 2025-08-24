@@ -12,6 +12,7 @@
         <module>domain</module>
         <module>application</module>
         <module>infrastructure-http</module>
+        <module>demo-server</module>
     </modules>
 
     <properties>
@@ -35,7 +36,7 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>5.13.4</version>
+            <version>5.10.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -45,5 +46,4 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
 </project>

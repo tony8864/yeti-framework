@@ -18,7 +18,7 @@ public class DataRegistry {
         return ref;
     }
 
-    static void clear() {
+    public static void clear() {
         data.clear();
     }
 }
