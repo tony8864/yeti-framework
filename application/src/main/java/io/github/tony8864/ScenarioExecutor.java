@@ -1,14 +1,12 @@
 package io.github.tony8864;
 
 import io.github.tony8864.entity.*;
-import io.github.tony8864.ports.HttpExecutor;
+import io.github.tony8864.ports.StepRunner;
 
 public class ScenarioExecutor {
-    private final HttpExecutor httpExecutor;
     private final StepRunner stepRunner;
 
-    public ScenarioExecutor(HttpExecutor httpExecutor, StepRunner stepRunner) {
-        this.httpExecutor = httpExecutor;
+    public ScenarioExecutor(StepRunner stepRunner) {
         this.stepRunner = stepRunner;
     }
 
@@ -17,30 +15,33 @@ public class ScenarioExecutor {
         if (scenario.getBeforeHook() != null) scenario.getBeforeHook().run();
 
         for (Step step : scenario.getSteps()) {
-            try {
-                stepRunner.runStep(step, context);
-            } catch (Exception ex) {
-                if (scenario.getErrorHandler() != null) {
-                    ErrorStrategy strategy = scenario.getErrorHandler().apply(new StepError(step, ex));
-                    switch (strategy) {
-                        case CONTINUE -> {
-                            continue;
-                        }
-                        case RETRY -> {
-                            stepRunner.runStep(step, context);
-                            continue;
-                        }
-                        case ABORT -> {
-                            throw ex;
-                        }
-                    }
-                }
-                else {
-                    throw ex;
-                }
-            }
+            executeStepWithHandling(step, context, scenario);
         }
 
         if (scenario.getAfterHook() != null) scenario.getAfterHook().run();
+    }
+
+    private void executeStepWithHandling(Step step, VariableContext context, Scenario scenario) {
+        try {
+            stepRunner.runStep(step, context);
+        } catch (RuntimeException ex) {
+            handleStepError(step, context, scenario, ex);
+        }
+    }
+
+    private void handleStepError(Step step, VariableContext context, Scenario scenario, RuntimeException ex) {
+        var handler = scenario.getErrorHandler();
+
+        if (handler != null) {
+            ErrorStrategy strategy = handler.apply(new StepError(step, ex));
+            switch (strategy) {
+                case CONTINUE -> {}
+                case RETRY -> stepRunner.runStep(step, context);
+                case ABORT -> throw ex;
+            }
+        }
+        else {
+            throw ex;
+        }
     }
 }

@@ -4,6 +4,7 @@ import io.github.tony8864.entity.ErrorStrategy;
 import io.github.tony8864.entity.Scenario;
 import io.github.tony8864.entity.Step;
 import io.github.tony8864.ports.HttpExecutor;
+import io.github.tony8864.ports.StepRunner;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -14,7 +15,7 @@ class ScenarioExecutorTest {
     void shouldRunHooksAndStepsInOrder() {
         HttpExecutor httpExecutor = mock(HttpExecutor.class);
         StepRunner stepRunner = mock(StepRunner.class);
-        ScenarioExecutor executor = new ScenarioExecutor(httpExecutor, stepRunner);
+        ScenarioExecutor executor = new ScenarioExecutor(stepRunner);
 
         Scenario scenario = Scenario.of("Test Scenario")
                 .before(() -> System.out.println("before"))
@@ -36,7 +37,7 @@ class ScenarioExecutorTest {
     void shouldRunBeforeAndAfterHooks() {
         HttpExecutor httpExecutor = mock(HttpExecutor.class);
         StepRunner stepRunner = mock(StepRunner.class);
-        ScenarioExecutor executor = new ScenarioExecutor(httpExecutor, stepRunner);
+        ScenarioExecutor executor = new ScenarioExecutor(stepRunner);
 
         final boolean[] flags = {false, false};
 
@@ -58,7 +59,7 @@ class ScenarioExecutorTest {
     void shouldAbortScenarioOnErrorByDefault() {
         HttpExecutor httpExecutor = mock(HttpExecutor.class);
         StepRunner stepRunner = mock(StepRunner.class);
-        ScenarioExecutor executor = new ScenarioExecutor(httpExecutor, stepRunner);
+        ScenarioExecutor executor = new ScenarioExecutor(stepRunner);
 
         Step step = Step.of("Failing Step", "EP1", "DATA1");
         Scenario scenario = Scenario.of("Abort by default").step(step);
@@ -76,7 +77,7 @@ class ScenarioExecutorTest {
     void shouldAbortScenarioWhenErrorHandlerReturnsAbort() {
         HttpExecutor httpExecutor = mock(HttpExecutor.class);
         StepRunner stepRunner = mock(StepRunner.class);
-        ScenarioExecutor executor = new ScenarioExecutor(httpExecutor, stepRunner);
+        ScenarioExecutor executor = new ScenarioExecutor(stepRunner);
 
         Step step = Step.of("Step 1", "EP1", "DATA1");
         Scenario scenario = Scenario.of("Abort Test")
@@ -96,7 +97,7 @@ class ScenarioExecutorTest {
     void shouldContinueWhenErrorHandlerReturnsContinue() {
         HttpExecutor httpExecutor = mock(HttpExecutor.class);
         StepRunner stepRunner = mock(StepRunner.class);
-        ScenarioExecutor executor = new ScenarioExecutor(httpExecutor, stepRunner);
+        ScenarioExecutor executor = new ScenarioExecutor(stepRunner);
 
         Step step1 = Step.of("Step 1", "EP1", "DATA1");
         Step step2 = Step.of("Step 2", "EP2", "DATA2");
@@ -120,7 +121,7 @@ class ScenarioExecutorTest {
     void shouldRetryStepWhenErrorHandlerReturnsRetry() {
         HttpExecutor httpExecutor = mock(HttpExecutor.class);
         StepRunner stepRunner = mock(StepRunner.class);
-        ScenarioExecutor executor = new ScenarioExecutor(httpExecutor, stepRunner);
+        ScenarioExecutor executor = new ScenarioExecutor(stepRunner);
 
         Step step = Step.of("Retry Step", "EP1", "DATA1");
         Scenario scenario = Scenario.of("Retry Test")
