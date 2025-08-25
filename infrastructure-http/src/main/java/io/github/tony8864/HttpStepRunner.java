@@ -37,7 +37,7 @@ public class HttpStepRunner implements StepRunner {
         );
 
         if (step.getExpectedStatus() != null && response.statusCode() != step.getExpectedStatus()) {
-            throw new RuntimeException("Expected " + step.getExpectedStatus() + " but got " + response.statusCode());
+            throw new AssertionError("Expected " + step.getExpectedStatus() + " but got " + response.statusCode());
         }
 
         step.getExtractors().forEach(e -> e.extract(context, response));

@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(
         classes = DemoServerApplication.class,
@@ -125,5 +125,74 @@ public class IntegrationTest {
         executor.run(scenario);
     }
 
+    @Test
+    void shoudldFailWhenStatusCodeDoesNotMatch() {
+        EndpointRegistry.clear();
+        EndpointRegistry.register(Endpoint.of(
+                "CREATE_USER", HttpMethod.POST, "/users", UserRequest.class, String.class));
+
+        DataRegistry.clear();
+        DataRegistry.register("BOB_USER", new UserRequest("Bob"));
+
+        Scenario scenario = Scenario.of("Expect wrong status");
+        scenario.step("Create Bob", "CREATE_USER", "BOB_USER")
+                .expectStatus(200);
+
+        String baseUrl = "http://localhost:" + port;
+        StepRunner runner = new HttpStepRunner(new WebClientHttpExecutor(baseUrl));
+        ScenarioExecutor executor = new ScenarioExecutor(runner);
+
+        assertThrows(AssertionError.class, () -> executor.run(scenario));
+    }
+
+    @Test
+    void shouldFailWhenVariableIsMissing() {
+        EndpointRegistry.clear();
+        EndpointRegistry.register(Endpoint.of(
+                "GET_USER", HttpMethod.GET, "/users/{id}", null, String.class));
+
+        Scenario scenario = Scenario.of("Missing variable");
+        scenario.step("Get with missing id", "GET_USER", null)
+                .withPathParam("id", "${unknownId}") // never set
+                .expectStatus(200);
+
+        String baseUrl = "http://localhost:" + port;
+        StepRunner runner = new HttpStepRunner(new WebClientHttpExecutor(baseUrl));
+        ScenarioExecutor executor = new ScenarioExecutor(runner);
+
+        assertThrows(IllegalArgumentException.class, () -> executor.run(scenario));
+    }
+
+    @Test
+    void shouldFailWhenJsonPathNotFound() {
+        EndpointRegistry.clear();
+        EndpointRegistry.register(Endpoint.of(
+                "CREATE_USER", HttpMethod.POST, "/users", UserRequest.class, String.class));
+
+        DataRegistry.clear();
+        DataRegistry.register("ALICE_USER", new UserRequest("Alice"));
+
+        Scenario scenario = Scenario.of("Invalid JSONPath");
+        scenario.step("Create Alice", "CREATE_USER", "ALICE_USER")
+                .saveAs("notFound", "$.doesNotExist")
+                .expectStatus(201);
+
+        String baseUrl = "http://localhost:" + port;
+        StepRunner runner = new HttpStepRunner(new WebClientHttpExecutor(baseUrl));
+        ScenarioExecutor executor = new ScenarioExecutor(runner);
+
+        assertThrows(RuntimeException.class, () -> executor.run(scenario));
+    }
+
+    @Test
+    void shouldHandleEmptyScenario() {
+        Scenario scenario = Scenario.of("Empty scenario");
+
+        String baseUrl = "http://localhost:" + port;
+        StepRunner runner = new HttpStepRunner(new WebClientHttpExecutor(baseUrl));
+        ScenarioExecutor executor = new ScenarioExecutor(runner);
+
+        assertDoesNotThrow(() -> executor.run(scenario));
+    }
     record UserRequest(String name) {}
 }

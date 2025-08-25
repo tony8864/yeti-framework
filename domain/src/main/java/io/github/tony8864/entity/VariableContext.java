@@ -23,7 +23,7 @@ public class VariableContext {
         while (m.find()) {
             String varName = m.group(1);
             Object val = variables.get(varName);
-            if (val == null) throw new RuntimeException("Variablenot found: " + varName);
+            if (val == null) throw new IllegalArgumentException("Variablenot found: " + varName);
             m.appendReplacement(sb, val.toString());
         }
         m.appendTail(sb);
